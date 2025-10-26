@@ -5,18 +5,29 @@ Views do app Farms com:
 - Listagens com filtros e paginação (fazendas e documentos)
 - CRUD com escopo por usuário (owner) e mensagens de sucesso
 - Otimizações: select_related, ordering dinâmico (sort/dir), querystring no contexto
+- Endpoint para testar notificações (email/whatsapp)
 """
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.core.cache import cache
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import F, Q, Value as V
 from django.db.models.functions import Replace
+from django.http import JsonResponse
 from django.urls import reverse_lazy
+from django.views import View
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from .forms import DocumentFilterForm, DocumentForm, FarmFilterForm, FarmForm
 from .models import Document, Farm
-
+from .services.notifications import (
+    NotificationError,
+    NotConfiguredError,
+    send_test_email,
+    send_test_whatsapp,
+)
 
 # =============================
 # Fazendas
@@ -29,11 +40,7 @@ class FarmListView(LoginRequiredMixin, ListView):
     context_object_name = "farms"
     paginate_by = 20
 
-    # campos permitidos para ordenação: chave -> expressão ORM
-    SORT_MAP = {
-        "nome": "nome",
-        "matricula": "matricula",
-    }
+    SORT_MAP = {"nome": "nome", "matricula": "matricula"}
 
     def get_ordering(self):
         sort = (self.request.GET.get("sort") or "nome").strip()
@@ -43,26 +50,17 @@ class FarmListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = Farm.objects.filter(owner=self.request.user)
-
-        # Normaliza CPF do proprietário (remove . - /) para facilitar busca
         qs = qs.annotate(
             cpf_digits=Replace(
-                Replace(
-                    Replace(F("proprietario_cpf"), V("."), V("")),
-                    V("-"),
-                    V(""),
-                ),
+                Replace(Replace(F("proprietario_cpf"), V("."), V("")), V("-"), V("")),
                 V("/"),
                 V(""),
             )
         )
-
         form = FarmFilterForm(self.request.GET or None)
-        self.filter_form = form  # para o contexto
-
+        self.filter_form = form
         if form.is_valid():
             cd = form.cleaned_data
-
             if cd.get("nome"):
                 qs = qs.filter(nome__icontains=cd["nome"])
             if cd.get("matricula"):
@@ -73,8 +71,6 @@ class FarmListView(LoginRequiredMixin, ListView):
                 qs = qs.filter(proprietario_nome__icontains=cd["proprietario_nome"])
             if cd.get("proprietario_cpf"):
                 qs = qs.filter(cpf_digits__icontains=cd["proprietario_cpf"])
-
-            # Busca global
             q = cd.get("q")
             if q:
                 q_digits = "".join(ch for ch in q if ch.isdigit())
@@ -86,13 +82,11 @@ class FarmListView(LoginRequiredMixin, ListView):
                     | Q(proprietario_cpf__icontains=q)
                     | Q(cpf_digits__icontains=q_digits)
                 )
-
         return qs.order_by(*self.get_ordering())
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["filter_form"] = getattr(self, "filter_form", FarmFilterForm())
-        # usados nos headers de ordenação
         ctx["current_sort"] = self.request.GET.get("sort") or "nome"
         ctx["current_dir"] = self.request.GET.get("dir") or "asc"
         return ctx
@@ -106,7 +100,6 @@ class FarmCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
     success_message = "Fazenda criada com sucesso."
 
     def form_valid(self, form):
-        # Garante owner = usuário logado
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
@@ -157,38 +150,29 @@ class DocumentListView(LoginRequiredMixin, ListView):
         return (f"-{field}", "pk") if direction == "desc" else (field, "pk")
 
     def get_queryset(self):
-        # Restringe por farms do usuário
         qs = Document.objects.filter(farm__owner=self.request.user).select_related("farm")
-
         form = DocumentFilterForm(self.request.GET or None)
         self.filter_form = form
-
         if form.is_valid():
             cd = form.cleaned_data
-
             if cd.get("nome"):
                 qs = qs.filter(nome__icontains=cd["nome"])
             if cd.get("fazenda"):
                 qs = qs.filter(farm__nome__icontains=cd["fazenda"])
             if cd.get("tipo"):
                 qs = qs.filter(tipo=cd["tipo"])
-
-            # Intervalos de data
             de = cd.get("data_emissao_de")
             ate = cd.get("data_emissao_ate")
             if de:
                 qs = qs.filter(data_emissao__gte=de)
             if ate:
                 qs = qs.filter(data_emissao__lte=ate)
-
             de = cd.get("data_vencimento_de")
             ate = cd.get("data_vencimento_ate")
             if de:
                 qs = qs.filter(data_vencimento__gte=de)
             if ate:
                 qs = qs.filter(data_vencimento__lte=ate)
-
-            # Busca global (mantém possibilidade de buscar e-mail/WhatsApp por 'q')
             q = cd.get("q")
             if q:
                 qs = qs.filter(
@@ -199,13 +183,11 @@ class DocumentListView(LoginRequiredMixin, ListView):
                     | Q(notify_email__icontains=q)
                     | Q(notify_whatsapp__icontains=q)
                 )
-
         return qs.order_by(*self.get_ordering())
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["filter_form"] = getattr(self, "filter_form", DocumentFilterForm())
-        # usados nos headers de ordenação
         ctx["current_sort"] = self.request.GET.get("sort") or "data_vencimento"
         ctx["current_dir"] = self.request.GET.get("dir") or "asc"
         return ctx
@@ -220,7 +202,7 @@ class DocumentCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["user"] = self.request.user  # DocumentForm limita farms e define created_by
+        kwargs["user"] = self.request.user
         return kwargs
 
 
@@ -232,7 +214,6 @@ class DocumentUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_message = "Documento atualizado com sucesso."
 
     def get_queryset(self):
-        # Apenas documentos de farms do usuário
         return Document.objects.filter(farm__owner=self.request.user).select_related("farm")
 
     def get_form_kwargs(self):
@@ -249,3 +230,60 @@ class DocumentDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
     def get_queryset(self):
         return Document.objects.filter(farm__owner=self.request.user)
+
+
+# =============================
+# API: Teste de Notificações
+# =============================
+
+class NotificationTestView(LoginRequiredMixin, View):
+    """
+    Endpoint para enviar teste de notificação.
+    POST JSON: {"channel": "email"|"whatsapp", "value": "<destino>"}
+    Throttle: 5 req/min por usuário e canal.
+    """
+    THROTTLE_LIMIT = 5  # por minuto
+
+    def post(self, request, *args, **kwargs):
+        import json
+
+        try:
+            payload = json.loads(request.body.decode("utf-8"))
+        except Exception:
+            return JsonResponse({"ok": False, "error": "JSON inválido."}, status=400)
+
+        channel = str(payload.get("channel") or "").strip().lower()
+        value = str(payload.get("value") or "").strip()
+
+        if channel not in {"email", "whatsapp"}:
+            return JsonResponse({"ok": False, "error": "Canal inválido."}, status=400)
+        if not value:
+            return JsonResponse({"ok": False, "error": "Informe um destino."}, status=400)
+
+        # Throttle por usuário e canal
+        key = f"notify_test:{request.user.id}:{channel}"
+        count = cache.get(key, 0)
+        if count >= self.THROTTLE_LIMIT:
+            return JsonResponse({"ok": False, "error": "Muitas tentativas. Tente novamente em instantes."}, status=429)
+        cache.set(key, count + 1, timeout=60)  # 1 minuto
+
+        try:
+            if channel == "email":
+                try:
+                    validate_email(value)
+                except DjangoValidationError:
+                    return JsonResponse({"ok": False, "error": "E-mail inválido."}, status=400)
+                ident = send_test_email(value, request.user)
+                return JsonResponse({"ok": True, "channel": "email", "sent_to": value, "id": ident})
+
+            else:  # whatsapp
+                # Delega a normalização/validação para o serviço, que aceita formatos variados
+                sid = send_test_whatsapp(value, request.user)
+                return JsonResponse({"ok": True, "channel": "whatsapp", "sent_to": value, "id": sid})
+
+        except NotConfiguredError as e:
+            return JsonResponse({"ok": False, "error": str(e)}, status=400)
+        except NotificationError as e:
+            return JsonResponse({"ok": False, "error": str(e)}, status=400)
+        except Exception as e:
+            return JsonResponse({"ok": False, "error": f"Erro inesperado: {e}"}, status=500)

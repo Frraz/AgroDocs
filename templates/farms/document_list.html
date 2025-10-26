@@ -6,6 +6,7 @@
     <div class="card-body">
       <div class="d-flex align-items-center justify-content-between mb-2">
         <h1 class="h5 m-0">Documentos</h1>
+        <a class="btn btn-sm btn-primary" href="{% url 'farms:document_create' %}">Novo Documento</a>
       </div>
 
       <form method="get" class="mb-3">
@@ -46,7 +47,7 @@
 
           <div class="col-12 col-md-4">
             <label class="form-label">Busca</label>
-            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nome, tipo, fazenda, e também e-mail/WhatsApp..." />
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nome, tipo, fazenda..." />
           </div>
 
           <div class="col-12 col-md-4 d-flex align-items-end gap-2">
@@ -100,6 +101,7 @@
 
               <th>E-mail</th>
               <th>WhatsApp</th>
+              <th class="text-end">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -112,9 +114,13 @@
                 <td>{{ d.data_vencimento|date:"d/m/Y" }}</td>
                 <td>{{ d.notify_email|default:"—" }}</td>
                 <td>{{ d.notify_whatsapp|default:"—" }}</td>
+                <td class="text-end">
+                  <a class="btn btn-sm btn-outline-primary" href="{% url 'farms:document_update' d.pk %}">Editar</a>
+                  <a class="btn btn-sm btn-outline-danger" href="{% url 'farms:document_delete' d.pk %}">Excluir</a>
+                </td>
               </tr>
             {% empty %}
-              <tr><td colspan="7" class="text-center text-muted">Nenhum documento encontrado.</td></tr>
+              <tr><td colspan="8" class="text-center text-muted">Nenhum documento encontrado.</td></tr>
             {% endfor %}
           </tbody>
         </table>

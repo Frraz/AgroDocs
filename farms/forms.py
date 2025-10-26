@@ -4,9 +4,9 @@
 Forms e filtros do app Farms.
 
 Melhorias:
-- Helpers utilitários (only_digits, regex E.164).
+- Helpers utilitários (only_digits).
 - Validações robustas de CPF/CNPJ e CAR (com normalização).
-- Normalização de WhatsApp para E.164 (assumindo +55 se ausente).
+- Normalização de WhatsApp para E.164 (assumindo +55 se ausente) via serviço compartilhado.
 - save() do DocumentForm idempotente e atômico ao sincronizar lembretes.
 - UX: placeholders, autocomplete e máscaras preservadas.
 - Filtros (fazendas e documentos) com limpeza/normalização.
@@ -22,6 +22,7 @@ from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from .models import Document, DocumentReminder, Farm
+from .services.notifications import normalize_phone_to_e164, NotificationError
 
 User = get_user_model()
 
@@ -32,8 +33,6 @@ User = get_user_model()
 ONLY_DIGITS_RE = re.compile(r"\D+")
 # Aceita qualquer UF (2 letras), 7 dígitos, 32 alfanum maiúsculos
 CAR_PATTERN = re.compile(r"^[A-Z]{2}-\d{7}-[A-Z0-9]{32}$")
-# E.164: + e até 15 dígitos (sem espaços, sem pontuação)
-E164_RE = re.compile(r"^\+?[1-9]\d{1,14}$")
 
 
 def only_digits(value: str) -> str:
@@ -281,14 +280,11 @@ class DocumentForm(forms.ModelForm):
         raw = (self.cleaned_data.get("notify_whatsapp") or "").strip()
         if not raw:
             return raw
-        # Normaliza caracteres comuns de formatação
-        raw = re.sub(r"[\s\-\(\)]", "", raw)
-        # Se vier nacional (sem +), assume Brasil (+55)
-        if not raw.startswith("+"):
-            raw = "+55" + raw
-        if not E164_RE.match(raw):
-            raise forms.ValidationError(_("Informe um número válido (ex.: +5511999999999)."))
-        return raw
+        # Normaliza para E.164 com default do Brasil (+55) e valida via serviço
+        try:
+            return normalize_phone_to_e164(raw, default_country_code="+55")
+        except NotificationError as e:
+            raise forms.ValidationError(str(e))
 
     @transaction.atomic
     def save(self, commit: bool = True) -> Document:
