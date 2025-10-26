@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,10 +26,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      # Remove dependências específicas de SO que quebram no PyPI (ex.: bcc)
+      - name: Prepare requirements for CI
+        run: |
+          if [ -f requirements.txt ]; then
+            sed -E '/^(bcc|python-bcc|python3-bcc)(==.*)?$/d' requirements.txt > requirements.ci.txt
+          fi
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.ci.txt ]; then
+            pip install -r requirements.ci.txt
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
 
       - name: Django check
         env:
