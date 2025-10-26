@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+env/
+
+# IDE/editor
+.vscode/
+.idea/
+
+# Django
+staticfiles/
+media/
+*.log
+*.pot
+*.py,cover
+db.sqlite3
+local_settings.py
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Node (se existir)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
