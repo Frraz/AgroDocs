@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Excluir Documento</h1>
+<p>Tem certeza que deseja excluir o documento "{{ object }}"?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn">Confirmar</button>
+  <a class="btn-outline" href="{% url 'farms:document-list' %}">Cancelar</a>
+</form>
+{% endblock %}

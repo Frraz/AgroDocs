@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Excluir Fazenda</h1>
+<p>Tem certeza que deseja excluir a fazenda "{{ object }}"?</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn">Confirmar</button>
+  <a class="btn-outline" href="{% url 'farms:farm-list' %}">Cancelar</a>
+</form>
+{% endblock %}

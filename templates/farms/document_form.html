@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <!-- Coluna principal centralizada -->
+  <div class="col-12 col-lg-8 col-xl-7">
+    <div class="card">
+      <div class="card-body">
+        <h1 class="h5 mb-3">
+          <i class="bi bi-file-earmark-text me-2"></i>
+          {% if object %}Editar documento{% else %}Novo documento{% endif %}
+        </h1>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <!-- Layout compacto em grid -->
+          <div class="row g-3">
+            <!-- Dados principais -->
+            <div class="col-12 col-lg-8">
+              <label class="form-label" for="{{ form.farm.id_for_label }}">{{ form.farm.label }} *</label>
+              {{ form.farm }}
+              {% for error in form.farm.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12 col-lg-4">
+              <label class="form-label" for="{{ form.tipo.id_for_label }}">{{ form.tipo.label }} *</label>
+              {{ form.tipo }}
+              {% for error in form.tipo.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label" for="{{ form.nome.id_for_label }}">{{ form.nome.label }} *</label>
+              {{ form.nome }}
+              {% for error in form.nome.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <!-- Datas (lado a lado em md+) -->
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="{{ form.data_emissao.id_for_label }}">{{ form.data_emissao.label }} *</label>
+              {{ form.data_emissao }}
+              {% for error in form.data_emissao.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="{{ form.data_vencimento.id_for_label }}">{{ form.data_vencimento.label }} *</label>
+              {{ form.data_vencimento }}
+              {% for error in form.data_vencimento.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <!-- Notificações (lado a lado em md+) -->
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="{{ form.notify_email.id_for_label }}">{{ form.notify_email.label }}</label>
+              {{ form.notify_email }}
+              {% for error in form.notify_email.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="{{ form.notify_whatsapp.id_for_label }}">
+                {{ form.notify_whatsapp.label }}{% if form.notify_whatsapp.field.required %} *{% endif %}
+              </label>
+              {{ form.notify_whatsapp }}
+              <div class="form-help mt-1" data-phone-hint></div>
+              {% for error in form.notify_whatsapp.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <!-- Lembretes (compacto) -->
+            <div class="col-12">
+              <label class="form-label d-block">{{ form.lembretes.label|default:"Lembretes" }}</label>
+              {{ form.lembretes }}
+              {% for error in form.lembretes.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
+
+          <!-- Ações (alinhadas à direita) -->
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <a href="{% url 'farms:document-list' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button class="btn btn-primary">
+              <i class="bi bi-check2 me-1"></i>Salvar
+            </button>
+          </div>
+
+          {% for error in form.non_field_errors %}
+            <div class="alert alert-danger mt-3">{{ error }}</div>
+          {% endfor %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

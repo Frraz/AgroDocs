@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Acesso bloqueado</h1>
+  <p>Seu acesso está temporariamente bloqueado.</p>
+  <p>Entre em contato com o administrador para mais informações.</p>
+  <p><a class="btn" href="{% url 'login' %}">Voltar para o login</a></p>
+{% endblock %}
