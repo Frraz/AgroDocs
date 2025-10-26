@@ -1,48 +1,138 @@
 {% extends "base.html" %}
+{% load querystring sort_helpers %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 m-0"><i class="bi bi-file-text me-2"></i>Documentos</h1>
-  <a href="{% url 'farms:document-create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Novo documento</a>
-</div>
+<div class="container py-3">
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h1 class="h5 m-0">Documentos</h1>
+      </div>
 
-<div class="card">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle m-0">
-        <thead class="table-light">
-          <tr>
-            <th>Documento</th>
-            <th>Fazenda</th>
-            <th>Emissão</th>
-            <th>Vencimento</th>
-            <th class="text-end">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for document in documents %}
-          <tr>
-            <td class="fw-semibold">{{ document.nome }}</td>
-            <td>{{ document.farm.nome }}</td>
-            <td>{{ document.data_emissao|date:"d/m/Y" }}</td>
-            <td>
-              <span class="badge text-bg-light border">
-                {{ document.data_vencimento|date:"d/m/Y" }}
-              </span>
-            </td>
-            <td class="text-end">
-              <a class="btn btn-sm btn-outline-secondary" href="{% url 'farms:document-update' document.pk %}">
-                <i class="bi bi-pencil-square"></i>
-              </a>
-              <a class="btn btn-sm btn-outline-danger" href="{% url 'farms:document-delete' document.pk %}">
-                <i class="bi bi-trash3"></i>
-              </a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="5" class="text-center text-muted py-4">Nenhum documento encontrado.</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
+      <form method="get" class="mb-3">
+        <div class="row g-2">
+          <div class="col-12 col-md-3">
+            <label class="form-label">Nome</label>
+            <input type="text" name="nome" value="{{ request.GET.nome }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Fazenda (nome)</label>
+            <input type="text" name="fazenda" value="{{ request.GET.fazenda }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-2">
+            <label class="form-label">Tipo</label>
+            <select name="tipo" class="form-select">
+              <option value="">Todos</option>
+              {% for value,label in filter_form.fields.tipo.choices %}
+                {% if value %}<option value="{{ value }}" {% if request.GET.tipo == value|stringformat:"s" %}selected{% endif %}>{{ label }}</option>{% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12 col-md-2">
+            <label class="form-label">Emissão de</label>
+            <input type="date" name="data_emissao_de" value="{{ request.GET.data_emissao_de }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-2">
+            <label class="form-label">Emissão até</label>
+            <input type="date" name="data_emissao_ate" value="{{ request.GET.data_emissao_ate }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-2">
+            <label class="form-label">Venc. de</label>
+            <input type="date" name="data_vencimento_de" value="{{ request.GET.data_vencimento_de }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-2">
+            <label class="form-label">Venc. até</label>
+            <input type="date" name="data_vencimento_ate" value="{{ request.GET.data_vencimento_ate }}" class="form-control" />
+          </div>
+
+          <div class="col-12 col-md-4">
+            <label class="form-label">Busca</label>
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nome, tipo, fazenda, e também e-mail/WhatsApp..." />
+          </div>
+
+          <div class="col-12 col-md-4 d-flex align-items-end gap-2">
+            <button class="btn btn-primary" type="submit">Filtrar</button>
+            <a class="btn btn-outline-secondary" href="{% url 'farms:document_list' %}">Limpar</a>
+          </div>
+        </div>
+      </form>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>
+                {% next_dir current_sort current_dir 'nome' as nome_next_dir %}
+                <a href="?{% querystring request.GET sort='nome' dir=nome_next_dir page=None %}">
+                  Nome
+                  {% sort_icon current_sort current_dir 'nome' as icon %}
+                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
+                </a>
+              </th>
+
+              <th>
+                {% next_dir current_sort current_dir 'fazenda' as faz_next_dir %}
+                <a href="?{% querystring request.GET sort='fazenda' dir=faz_next_dir page=None %}">
+                  Fazenda
+                  {% sort_icon current_sort current_dir 'fazenda' as icon %}
+                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
+                </a>
+              </th>
+
+              <th>Tipo</th>
+
+              <th>
+                {% next_dir current_sort current_dir 'data_emissao' as emis_next_dir %}
+                <a href="?{% querystring request.GET sort='data_emissao' dir=emis_next_dir page=None %}">
+                  Emissão
+                  {% sort_icon current_sort current_dir 'data_emissao' as icon %}
+                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
+                </a>
+              </th>
+
+              <th>
+                {% next_dir current_sort current_dir 'data_vencimento' as venc_next_dir %}
+                <a href="?{% querystring request.GET sort='data_vencimento' dir=venc_next_dir page=None %}">
+                  Vencimento
+                  {% sort_icon current_sort current_dir 'data_vencimento' as icon %}
+                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
+                </a>
+              </th>
+
+              <th>E-mail</th>
+              <th>WhatsApp</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in documents %}
+              <tr>
+                <td>{{ d.nome }}</td>
+                <td>{{ d.farm.nome }}</td>
+                <td>{{ d.get_tipo_display|default:d.tipo }}</td>
+                <td>{{ d.data_emissao|date:"d/m/Y" }}</td>
+                <td>{{ d.data_vencimento|date:"d/m/Y" }}</td>
+                <td>{{ d.notify_email|default:"—" }}</td>
+                <td>{{ d.notify_whatsapp|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7" class="text-center text-muted">Nenhum documento encontrado.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+      <nav class="d-flex justify-content-center">
+        <ul class="pagination mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% querystring request.GET page=page_obj.previous_page_number %}">Anterior</a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link">Anterior</span></li>{% endif %}
+          <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% querystring request.GET page=page_obj.next_page_number %}">Próxima</a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link">Próxima</span></li>{% endif %}
+        </ul>
+      </nav>
+      {% endif %}
     </div>
   </div>
 </div>

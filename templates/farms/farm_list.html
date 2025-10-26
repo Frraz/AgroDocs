@@ -1,47 +1,100 @@
 {% extends "base.html" %}
+{% load querystring sort_helpers %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h4 m-0"><i class="bi bi-house-door me-2"></i>Fazendas</h1>
-  <a href="{% url 'farms:farm-create' %}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Nova fazenda</a>
-</div>
+<div class="container py-3">
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h1 class="h5 m-0">Fazendas</h1>
+      </div>
 
-<div class="card">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle m-0">
-        <thead class="table-light">
-          <tr>
-            <th>Nome</th>
-            <th>Matrícula</th>
-            <th>Proprietário</th>
-            <th class="text-nowrap">CPF/CNPJ</th>
-            <th class="text-end">Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for farm in farms %}
+      <form method="get" class="mb-3">
+        <div class="row g-2">
+          <div class="col-12 col-md-3">
+            <label class="form-label">Nome</label>
+            <input type="text" name="nome" value="{{ request.GET.nome }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Matrícula</label>
+            <input type="text" name="matricula" value="{{ request.GET.matricula }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Recibo CAR</label>
+            <input type="text" name="car_recibo" value="{{ request.GET.car_recibo }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">Proprietário</label>
+            <input type="text" name="proprietario_nome" value="{{ request.GET.proprietario_nome }}" class="form-control" />
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label">CPF do proprietário</label>
+            <input type="text" name="proprietario_cpf" value="{{ request.GET.proprietario_cpf }}" class="form-control" placeholder="000.000.000-00" />
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label">Busca</label>
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nome, matrícula, CAR, CPF..." />
+          </div>
+          <div class="col-12 col-md-5 d-flex align-items-end gap-2">
+            <button class="btn btn-primary" type="submit">Filtrar</button>
+            <a class="btn btn-outline-secondary" href="{% url 'farms:farm_list' %}">Limpar</a>
+          </div>
+        </div>
+      </form>
+
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
             <tr>
-              <td class="fw-semibold">{{ farm.nome }}</td>
-              <td>{{ farm.matricula }}</td>
-              <td>{{ farm.proprietario_nome }}</td>
-              <td class="text-nowrap">
-                {# Exibe formatado se quiser (opcional, podemos criar um filtro) #}
-                {{ farm.proprietario_cpf }}
-              </td>
-              <td class="text-end">
-                <a class="btn btn-sm btn-outline-secondary" href="{% url 'farms:farm-update' farm.pk %}">
-                  <i class="bi bi-pencil-square"></i>
+              <th>
+                {% next_dir current_sort current_dir 'nome' as nome_next_dir %}
+                <a href="?{% querystring request.GET sort='nome' dir=nome_next_dir page=None %}">
+                  Nome
+                  {% sort_icon current_sort current_dir 'nome' as icon %}
+                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
                 </a>
-                <a class="btn btn-sm btn-outline-danger" href="{% url 'farms:farm-delete' farm.pk %}">
-                  <i class="bi bi-trash3"></i>
+              </th>
+              <th>
+                {% next_dir current_sort current_dir 'matricula' as mat_next_dir %}
+                <a href="?{% querystring request.GET sort='matricula' dir=mat_next_dir page=None %}">
+                  Matrícula
+                  {% sort_icon current_sort current_dir 'matricula' as icon %}
+                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
                 </a>
-              </td>
+              </th>
+              <th>Recibo CAR</th>
+              <th>Proprietário</th>
+              <th>CPF</th>
             </tr>
-          {% empty %}
-            <tr><td colspan="5" class="text-center text-muted py-4">Nenhuma fazenda cadastrada.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for f in farms %}
+              <tr>
+                <td>{{ f.nome }}</td>
+                <td>{{ f.matricula }}</td>
+                <td>{{ f.car_recibo|default:"—" }}</td>
+                <td>{{ f.proprietario_nome }}</td>
+                <td>{{ f.proprietario_cpf }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-center text-muted">Nenhuma fazenda encontrada.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated %}
+      <nav class="d-flex justify-content-center">
+        <ul class="pagination mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% querystring request.GET page=page_obj.previous_page_number %}">Anterior</a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link">Anterior</span></li>{% endif %}
+          <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% querystring request.GET page=page_obj.next_page_number %}">Próxima</a></li>
+          {% else %}<li class="page-item disabled"><span class="page-link">Próxima</span></li>{% endif %}
+        </ul>
+      </nav>
+      {% endif %}
     </div>
   </div>
 </div>
