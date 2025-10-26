@@ -1,18 +1,21 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
 *.so
 *.egg-info/
+*.dist-info/
+.eggs/
 dist/
 build/
+pip-wheel-metadata/
 
 # Virtualenv
 .venv/
 venv/
 ENV/
 env/
+.venv-*/
 
 # IDE/editor
 .vscode/
@@ -20,20 +23,44 @@ env/
 
 # Django
 staticfiles/
+!staticfiles/.gitkeep
 media/
+!media/.gitkeep
 *.log
+logs/
 *.pot
-*.py,cover
 db.sqlite3
+*.sqlite3
 local_settings.py
+
+# Tests/Coverage/Lint
+.coverage
+.coverage.*
+*.cover
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+.cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
 
 # Env
 .env
 .env.*
 !.env.example
+.envrc
+*.env.local
 
 # Node (se existir)
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # OS
 .DS_Store
