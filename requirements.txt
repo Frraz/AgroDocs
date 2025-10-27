@@ -1,20 +1,40 @@
-# Core do projeto
-Django==5.2.*
+# Core do projeto (compatível com Python 3.12)
+Django>=5.2,<5.3
 
-# Se você usa ImageField (uploads)
+# Uploads de imagem
 Pillow>=10.2,<11
 
-# Carregar variáveis do .env durante o desenvolvimento
+# Variáveis de ambiente (.env)
 python-dotenv>=1.0.1,<2
 
 # Agendador de tarefas via cron
 django-crontab>=0.7,<1.0
 
+# Notificações (WhatsApp/SMS) — usado em farms/services/notifications.py
+twilio>=9,<10
+
 # Windows: base de timezones (no-op em Linux/macOS)
 tzdata>=2024.1; sys_platform == "win32"
 
 # ---- Opcionais para produção (descomente se for usar) ----
-# whitenoise>=6.7
-# psycopg[binary]>=3.2
-# dj-database-url>=2.2
-# gunicorn>=21.2
+# Servir estáticos sem CDN/servidor externo
+# whitenoise>=6.7,<7
+# PostgreSQL (driver com binários)
+# psycopg[binary]>=3.2,<3.4
+# Leitura de DATABASE_URL
+# dj-database-url>=2.2,<3
+# Servidor WSGI
+# gunicorn>=21.2,<22
+
+# ---- Opcionais para desenvolvimento/CI (descomente se for usar) ----
+# Testes com pytest
+# pytest>=8.3,<9
+# pytest-django>=4.9,<5
+# Cobertura
+# coverage>=7.6,<8
+# Lint/format
+# flake8>=7.1,<8
+# black>=24.8,<25
+# isort>=5.13,<6
+# Debug de Django
+# django-debug-toolbar>=4.4,<5
