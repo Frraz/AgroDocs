@@ -4,10 +4,27 @@ on:
   push:
     branches: ["main"]
   pull_request:
+    branches: ["main"]
+
+# Evita rodar múltiplos jobs da mesma ref em paralelo
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      DJANGO_SETTINGS_MODULE: agrodocs.settings
+      DJANGO_SECRET_KEY: test
+      DEBUG: "True"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+      # Se seu settings ler DATABASE_URL, usamos SQLite no CI
+      DATABASE_URL: "sqlite:///db.sqlite3"
 
     steps:
       - name: Checkout
@@ -17,26 +34,32 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          cache: "pip"
+          cache-dependency-path: |
+            requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          # Test runner padrão do Django; se preferir pytest, instale pytest/pytest-django
+          # pip install pytest pytest-django
 
-      - name: Django check
-        env:
-          DJANGO_SECRET_KEY: test
-          DEBUG: "True"
-          ALLOWED_HOSTS: "localhost,127.0.0.1"
-          # Caso seu settings leia DATABASE_URL, garantimos um fallback inofensivo
-          DATABASE_URL: "sqlite:///db.sqlite3"
+      - name: Django checks
         run: |
           python manage.py check
+          # Garante que não há migrações pendentes
+          python manage.py makemigrations --check --dry-run
+
+      - name: Migrate database
+        run: python manage.py migrate --noinput
+
+      - name: Collect static
+        # Ajuda a detectar problemas de configuração de staticfiles (ex.: caminhos/collectstatic)
+        run: python manage.py collectstatic --noinput
+
+      - name: Run tests
+        run: |
+          # Use pytest se preferir (e tiver instalado/configurado)
+          # pytest -q
+          python manage.py test -v 2
