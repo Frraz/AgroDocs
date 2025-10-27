@@ -1,103 +1,143 @@
+<!-- templates/farms/farm_list.html -->
+ 
 {% extends "base.html" %}
 {% load querystring sort_helpers %}
+{% block title %}Fazendas · AgroDocs{% endblock %}
 {% block content %}
 <div class="container py-3">
   <div class="card">
     <div class="card-body">
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h1 class="h5 m-0">Fazendas</h1>
-        <a class="btn btn-sm btn-primary" href="{% url 'farms:farm_create' %}">Nova Fazenda</a>
+        <div>
+          <h1 class="h5 m-0">Fazendas</h1>
+          <small class="text-muted">Liste, filtre e gerencie as fazendas cadastradas.</small>
+        </div>
+        <a class="btn btn-sm btn-primary" href="{% url 'farms:farm_create' %}">
+          <i class="bi bi-house-add me-1"></i>Nova Fazenda
+        </a>
       </div>
 
-      <form method="get" class="mb-3">
+      <form method="get" class="mb-3" role="search" aria-label="Filtro de fazendas">
         <div class="row g-2">
           <div class="col-12 col-md-3">
-            <label class="form-label">Nome</label>
-            <input type="text" name="nome" value="{{ request.GET.nome }}" class="form-control" />
+            <label class="form-label" for="f-nome">Nome</label>
+            <input id="f-nome" type="text" name="nome" value="{{ request.GET.nome }}" class="form-control" placeholder="Ex.: Fazenda Boa Vista" />
           </div>
+
           <div class="col-12 col-md-3">
-            <label class="form-label">Matrícula</label>
-            <input type="text" name="matricula" value="{{ request.GET.matricula }}" class="form-control" />
+            <label class="form-label" for="f-matricula">Matrícula</label>
+            <input id="f-matricula" type="text" name="matricula" value="{{ request.GET.matricula }}" class="form-control" placeholder="Ex.: 1234567" />
           </div>
+
           <div class="col-12 col-md-3">
-            <label class="form-label">Recibo CAR</label>
-            <input type="text" name="car_recibo" value="{{ request.GET.car_recibo }}" class="form-control" />
+            <label class="form-label" for="f-car">Recibo CAR</label>
+            <input id="f-car" type="text" name="car_recibo" value="{{ request.GET.car_recibo }}" class="form-control" placeholder="UF-0000000-XXXXXXXX..." />
           </div>
+
           <div class="col-12 col-md-3">
-            <label class="form-label">Proprietário</label>
-            <input type="text" name="proprietario_nome" value="{{ request.GET.proprietario_nome }}" class="form-control" />
+            <label class="form-label" for="f-prop">Proprietário</label>
+            <input id="f-prop" type="text" name="proprietario_nome" value="{{ request.GET.proprietario_nome }}" class="form-control" placeholder="Nome do proprietário" />
           </div>
+
           <div class="col-12 col-md-3">
-            <label class="form-label">CPF do proprietário</label>
-            <input type="text" name="proprietario_cpf" value="{{ request.GET.proprietario_cpf }}" class="form-control" placeholder="000.000.000-00" />
+            <label class="form-label" for="f-cpf">CPF do proprietário</label>
+            <input id="f-cpf" type="text" name="proprietario_cpf" value="{{ request.GET.proprietario_cpf }}" class="form-control" placeholder="000.000.000-00" />
           </div>
+
           <div class="col-12 col-md-4">
-            <label class="form-label">Busca</label>
-            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nome, matrícula, CAR, CPF..." />
+            <label class="form-label" for="f-q">Busca</label>
+            <input id="f-q" type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nome, matrícula, CAR, CPF..." />
           </div>
+
           <div class="col-12 col-md-5 d-flex align-items-end gap-2">
-            <button class="btn btn-primary" type="submit">Filtrar</button>
-            <a class="btn btn-outline-secondary" href="{% url 'farms:farm_list' %}">Limpar</a>
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-funnel me-1"></i>Filtrar
+            </button>
+            <a class="btn btn-outline-secondary" href="{% url 'farms:farm_list' %}">
+              <i class="bi bi-eraser me-1"></i>Limpar
+            </a>
           </div>
         </div>
       </form>
 
-      <div class="table-responsive">
+      <div class="table-responsive table-responsive-stack table-sticky-header">
         <table class="table table-hover align-middle">
           <thead>
             <tr>
-              <th>
+              <th scope="col" aria-sort="{% if current_sort == 'nome' %}{% if current_dir == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}">
                 {% next_dir current_sort current_dir 'nome' as nome_next_dir %}
                 <a href="?{% querystring request.GET sort='nome' dir=nome_next_dir page=None %}">
                   Nome
                   {% sort_icon current_sort current_dir 'nome' as icon %}
-                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
+                  {% if icon %}<span class="text-muted ms-1">{{ icon }}</span>{% endif %}
                 </a>
               </th>
-              <th>
+
+              <th scope="col" aria-sort="{% if current_sort == 'matricula' %}{% if current_dir == 'asc' %}ascending{% else %}descending{% endif %}{% else %}none{% endif %}">
                 {% next_dir current_sort current_dir 'matricula' as mat_next_dir %}
                 <a href="?{% querystring request.GET sort='matricula' dir=mat_next_dir page=None %}">
                   Matrícula
                   {% sort_icon current_sort current_dir 'matricula' as icon %}
-                  {% if icon %}<span class="text-muted">{{ icon }}</span>{% endif %}
+                  {% if icon %}<span class="text-muted ms-1">{{ icon }}</span>{% endif %}
                 </a>
               </th>
-              <th>Recibo CAR</th>
-              <th>Proprietário</th>
-              <th>CPF</th>
-              <th class="text-end">Ações</th>
+
+              <th scope="col">Recibo CAR</th>
+              <th scope="col">Proprietário</th>
+              <th scope="col">CPF</th>
+              <th scope="col" class="text-end">Ações</th>
             </tr>
           </thead>
           <tbody>
             {% for f in farms %}
               <tr>
-                <td>{{ f.nome }}</td>
-                <td>{{ f.matricula }}</td>
-                <td>{{ f.car_recibo|default:"—" }}</td>
-                <td>{{ f.proprietario_nome }}</td>
-                <td>{{ f.proprietario_cpf }}</td>
-                <td class="text-end">
-                  <a class="btn btn-sm btn-outline-primary" href="{% url 'farms:farm_update' f.pk %}">Editar</a>
-                  <a class="btn btn-sm btn-outline-danger" href="{% url 'farms:farm_delete' f.pk %}">Excluir</a>
+                <td data-th="Nome">{{ f.nome }}</td>
+                <td data-th="Matrícula">{{ f.matricula }}</td>
+                <td data-th="Recibo CAR">{{ f.car_recibo|default:"—" }}</td>
+                <td data-th="Proprietário">{{ f.proprietario_nome }}</td>
+                <td data-th="CPF">{{ f.proprietario_cpf }}</td>
+                <td data-th="Ações" class="text-end">
+                  <div class="d-flex gap-2 flex-wrap justify-content-end">
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'farms:farm_update' f.pk %}">
+                      <i class="bi bi-pencil-square me-1"></i>Editar
+                    </a>
+                    <a class="btn btn-sm btn-outline-danger" href="{% url 'farms:farm_delete' f.pk %}">
+                      <i class="bi bi-trash3 me-1"></i>Excluir
+                    </a>
+                  </div>
                 </td>
               </tr>
             {% empty %}
-              <tr><td colspan="6" class="text-center text-muted">Nenhuma fazenda encontrada.</td></tr>
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">Nenhuma fazenda encontrada.</td>
+              </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
 
       {% if is_paginated %}
-      <nav class="d-flex justify-content-center">
+      <nav class="d-flex justify-content-center" aria-label="Paginação de fazendas">
         <ul class="pagination mb-0">
           {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link" href="?{% querystring request.GET page=page_obj.previous_page_number %}">Anterior</a></li>
-          {% else %}<li class="page-item disabled"><span class="page-link">Anterior</span></li>{% endif %}
-          <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+            <li class="page-item">
+              <a class="page-link" href="?{% querystring request.GET page=page_obj.previous_page_number %}">Anterior</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+          </li>
+
           {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link" href="?{% querystring request.GET page=page_obj.next_page_number %}">Próxima</a></li>
-          {% else %}<li class="page-item disabled"><span class="page-link">Próxima</span></li>{% endif %}
+            <li class="page-item">
+              <a class="page-link" href="?{% querystring request.GET page=page_obj.next_page_number %}">Próxima</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Próxima</span></li>
+          {% endif %}
         </ul>
       </nav>
       {% endif %}

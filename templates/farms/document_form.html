@@ -1,147 +1,117 @@
+<!-- templates/farms/document_form.html -->
 {% extends "base.html" %}
 {% load static %}
+{% block title %}{{ form.instance.pk|yesno:"Editar documento,Novo documento" }} · AgroDocs{% endblock %}
 {% block content %}
 <div class="container py-3">
   <div class="card">
     <div class="card-body">
-      <h1 class="h5 mb-3">{{ form.instance.pk|yesno:"Editar documento,Novo documento" }}</h1>
+      <div class="d-flex align-items-start gap-3 mb-2">
+        <div class="text-primary fs-4"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <h1 class="h5 mb-0">{{ form.instance.pk|yesno:"Editar documento,Novo documento" }}</h1>
+          <small class="text-muted">Preencha as informações do documento e os canais de notificação.</small>
+        </div>
+      </div>
+      <hr class="my-3">
 
-      <form method="post" novalidate>
+      <form method="post" class="needs-validation" novalidate>
         {% csrf_token %}
 
         <div class="row g-3">
           <div class="col-12 col-md-6">
-            <label class="form-label">Fazenda</label>
+            <label class="form-label" for="{{ form.farm.id_for_label }}">Fazenda{% if form.farm.field.required %} *{% endif %}</label>
             {{ form.farm }}
-            {% if form.farm.errors %}<div class="text-danger small">{{ form.farm.errors }}</div>{% endif %}
+            {% if form.farm.help_text %}<div class="form-text">{{ form.farm.help_text }}</div>{% endif %}
+            {% if form.farm.errors %}<div class="invalid-feedback d-block">{{ form.farm.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12 col-md-6">
-            <label class="form-label">Nome</label>
+            <label class="form-label" for="{{ form.nome.id_for_label }}">Nome{% if form.nome.field.required %} *{% endif %}</label>
             {{ form.nome }}
-            {% if form.nome.errors %}<div class="text-danger small">{{ form.nome.errors }}</div>{% endif %}
+            {% if form.nome.help_text %}<div class="form-text">{{ form.nome.help_text }}</div>{% endif %}
+            {% if form.nome.errors %}<div class="invalid-feedback d-block">{{ form.nome.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12 col-md-6">
-            <label class="form-label">Tipo</label>
+            <label class="form-label" for="{{ form.tipo.id_for_label }}">Tipo{% if form.tipo.field.required %} *{% endif %}</label>
             {{ form.tipo }}
-            {% if form.tipo.errors %}<div class="text-danger small">{{ form.tipo.errors }}</div>{% endif %}
+            {% if form.tipo.help_text %}<div class="form-text">{{ form.tipo.help_text }}</div>{% endif %}
+            {% if form.tipo.errors %}<div class="invalid-feedback d-block">{{ form.tipo.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12 col-md-3">
-            <label class="form-label">Emissão</label>
+            <label class="form-label" for="{{ form.data_emissao.id_for_label }}">Emissão{% if form.data_emissao.field.required %} *{% endif %}</label>
             {{ form.data_emissao }}
-            {% if form.data_emissao.errors %}<div class="text-danger small">{{ form.data_emissao.errors }}</div>{% endif %}
+            {% if form.data_emissao.help_text %}<div class="form-text">{{ form.data_emissao.help_text }}</div>{% endif %}
+            {% if form.data_emissao.errors %}<div class="invalid-feedback d-block">{{ form.data_emissao.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12 col-md-3">
-            <label class="form-label">Vencimento</label>
+            <label class="form-label" for="{{ form.data_vencimento.id_for_label }}">Vencimento{% if form.data_vencimento.field.required %} *{% endif %}</label>
             {{ form.data_vencimento }}
-            {% if form.data_vencimento.errors %}<div class="text-danger small">{{ form.data_vencimento.errors }}</div>{% endif %}
+            {% if form.data_vencimento.help_text %}<div class="form-text">{{ form.data_vencimento.help_text }}</div>{% endif %}
+            {% if form.data_vencimento.errors %}<div class="invalid-feedback d-block">{{ form.data_vencimento.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12 col-md-6">
-            <label class="form-label d-flex align-items-center justify-content-between">
+            <label class="form-label d-flex align-items-center justify-content-between" for="{{ form.notify_email.id_for_label }}">
               <span>E-mail para notificar</span>
-              <button class="btn btn-sm btn-outline-primary" type="button" id="btn-test-email">
-                Testar e-mail
+              <button class="btn btn-sm btn-outline-primary" type="button" id="btn-test-email" data-url="{% url 'farms:notification_test' %}">
+                <i class="bi bi-envelope-check me-1"></i>Testar e-mail
               </button>
             </label>
             {{ form.notify_email }}
             <div class="form-text">Enviaremos lembretes deste documento para este e-mail.</div>
-            <div id="test-email-feedback" class="small mt-1"></div>
-            {% if form.notify_email.errors %}<div class="text-danger small">{{ form.notify_email.errors }}</div>{% endif %}
+            {% if form.notify_email.errors %}<div class="invalid-feedback d-block">{{ form.notify_email.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12 col-md-6">
-            <label class="form-label d-flex align-items-center justify-content-between">
+            <label class="form-label d-flex align-items-center justify-content-between" for="{{ form.notify_whatsapp.id_for_label }}">
               <span>WhatsApp para notificar</span>
-              <button class="btn btn-sm btn-outline-success" type="button" id="btn-test-whatsapp">
-                Testar WhatsApp
+              <button class="btn btn-sm btn-outline-success" type="button" id="btn-test-whatsapp" data-url="{% url 'farms:notification_test' %}">
+                <i class="bi bi-whatsapp me-1"></i>Testar WhatsApp
               </button>
             </label>
             {{ form.notify_whatsapp }}
-            <div class="form-text">Use formato E.164 (ex.: +5511999999999).</div>
-            <div id="test-whatsapp-feedback" class="small mt-1"></div>
-            {% if form.notify_whatsapp.errors %}<div class="text-danger small">{{ form.notify_whatsapp.errors }}</div>{% endif %}
+            <div class="form-text">Use formato E.164 (ex.: +5511999999999). Entradas com espaços são normalizadas.</div>
+            {% if form.notify_whatsapp.errors %}<div class="invalid-feedback d-block">{{ form.notify_whatsapp.errors|striptags }}</div>{% endif %}
           </div>
 
           <div class="col-12">
-            <label class="form-label">Lembretes</label>
+            <label class="form-label" for="{{ form.lembretes.id_for_label }}">Lembretes</label>
             {{ form.lembretes }}
-            {% if form.lembretes.errors %}<div class="text-danger small">{{ form.lembretes.errors }}</div>{% endif %}
+            {% if form.lembretes.help_text %}<div class="form-text">{{ form.lembretes.help_text }}</div>{% endif %}
+            {% if form.lembretes.errors %}<div class="invalid-feedback d-block">{{ form.lembretes.errors|striptags }}</div>{% endif %}
           </div>
         </div>
 
         <div class="mt-3 d-flex gap-2">
-          <button class="btn btn-primary" type="submit">Salvar</button>
-          <a class="btn btn-outline-secondary" href="{% url 'farms:document_list' %}">Cancelar</a>
+          <button class="btn btn-primary" type="submit"><i class="bi bi-save me-1"></i>Salvar</button>
+          <a class="btn btn-outline-secondary" href="{% url 'farms:document_list' %}"><i class="bi bi-x-circle me-1"></i>Cancelar</a>
         </div>
       </form>
     </div>
   </div>
 </div>
 
+{% comment %}
+Enhancer: adiciona classes/atributos esperados pelos JS (forms.js) caso o widget do Django não as tenha.
+- data-role e .date-picker para vincular flatpickr Emissão -> Vencimento
+- .phone-input para integrar intl-tel-input
+Este script é idempotente e não conflita com forms.js (que cuida dos testes de notificação).
+{% endcomment %}
 <script>
-// CSRF helper
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return decodeURIComponent(parts.pop().split(';').shift());
-}
-const csrftoken = getCookie('csrftoken');
-
-function setFeedback(el, msg, ok) {
-  el.textContent = msg;
-  el.classList.remove('text-danger', 'text-success');
-  el.classList.add(ok ? 'text-success' : 'text-danger');
-}
-
-async function postJSON(url, data) {
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
-    body: JSON.stringify(data),
-  });
-  const js = await resp.json().catch(() => ({}));
-  if (!resp.ok || js.ok === false) {
-    throw new Error(js.error || `Erro HTTP ${resp.status}`);
-  }
-  return js;
-}
-
-document.getElementById('btn-test-email')?.addEventListener('click', async (e) => {
-  const input = document.querySelector('[name="notify_email"]');
-  const fb = document.getElementById('test-email-feedback');
-  const btn = e.currentTarget;
-  const value = (input?.value || '').trim();
-  if (!value) return setFeedback(fb, 'Informe um e-mail para testar.', false);
-  btn.disabled = true; setFeedback(fb, 'Enviando teste de e-mail...', true);
-  try {
-    const res = await postJSON("{% url 'farms:notification_test' %}", { channel: 'email', value });
-    setFeedback(fb, `Teste enviado para ${res.sent_to}.`, true);
-  } catch (err) {
-    setFeedback(fb, err.message || 'Falha ao enviar teste de e-mail.', false);
-  } finally {
-    btn.disabled = false;
-  }
-});
-
-document.getElementById('btn-test-whatsapp')?.addEventListener('click', async (e) => {
-  const input = document.querySelector('[name="notify_whatsapp"]');
-  const fb = document.getElementById('test-whatsapp-feedback');
-  const btn = e.currentTarget;
-  const value = (input?.value || '').trim();
-  if (!value) return setFeedback(fb, 'Informe um número WhatsApp (E.164) para testar.', false);
-  btn.disabled = true; setFeedback(fb, 'Enviando teste de WhatsApp...', true);
-  try {
-    const res = await postJSON("{% url 'farms:notification_test' %}", { channel: 'whatsapp', value });
-    setFeedback(fb, `Teste enviado para ${res.sent_to}.`, true);
-  } catch (err) {
-    setFeedback(fb, err.message || 'Falha ao enviar teste de WhatsApp.', false);
-  } finally {
-    btn.disabled = false;
-  }
-});
+  (function(){
+    function addClassIf(el, cls){ if (el && !el.classList.contains(cls)) el.classList.add(cls); }
+    // Datas
+    var emissao = document.querySelector('input[name="data_emissao"]');
+    var venc = document.querySelector('input[name="data_vencimento"]');
+    if (emissao) { addClassIf(emissao, 'date-picker'); emissao.setAttribute('data-role', 'emissao'); }
+    if (venc) { addClassIf(venc, 'date-picker'); venc.setAttribute('data-role', 'vencimento'); }
+    // WhatsApp
+    var wa = document.querySelector('input[name="notify_whatsapp"]');
+    if (wa) { addClassIf(wa, 'phone-input'); wa.setAttribute('inputmode','tel'); wa.setAttribute('autocomplete','tel'); }
+  })();
 </script>
 {% endblock %}

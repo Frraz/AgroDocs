@@ -1,23 +1,115 @@
+<!-- templates/partials/form.html -->
+
 {% comment %}
-Uso:
-<form method="post" novalidate>
-  {% csrf_token %}
-  {% include "partials/form.html" with form=form %}
-  <div class="d-flex gap-2">
-    <button class="btn btn-primary">Salvar</button>
-    <a href="{{ cancel_url }}" class="btn btn-outline-secondary">Cancelar</a>
-  </div>
-</form>
+Partial de formulário reutilizável.
+
+Usos:
+1) Renderizar o formulário inteiro
+   {% include "partials/form.html" with form=form %}
+
+2) Renderizar um único campo (útil para grids responsivos)
+   <div class="col-12 col-md-6">
+     {% include "partials/form.html" with field=form.nome %}
+   </div>
+
+Regras:
+- Mantém rótulo acima (exceto checkbox simples, onde o label fica ao lado).
+- Exibe help_text e erros abaixo do campo.
+- Preserva atributos e classes definidos no forms.py (ex.: form-control, máscaras).
+- Mostra * para campos obrigatórios.
+- Renderiza campos ocultos quando for o formulário completo.
 {% endcomment %}
 
-{% for field in form %}
-  <div class="mb-3">
-    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
-    {{ field }}
-    {% if field.help_text %}<div class="form-help">{{ field.help_text }}</div>{% endif %}
-    {% for error in field.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
-  </div>
-{% endfor %}
-{% for error in form.non_field_errors %}
-  <div class="alert alert-danger">{{ error }}</div>
-{% endfor %}
+{# ============ Render de um ÚNICO campo ============ #}
+{% if field %}
+  {% with f=field %}
+    {% if f.is_hidden %}
+      {{ f }}
+    {% else %}
+      {% if f.field.widget.input_type == "checkbox" %}
+        <div class="mb-3" data-required="{{ f.field.required|yesno:'1,0' }}">
+          <div class="form-check">
+            {{ f }}
+            <label class="form-check-label" for="{{ f.id_for_label }}">
+              {{ f.label }}{% if f.field.required %} *{% endif %}
+            </label>
+          </div>
+          {% if f.help_text %}
+            <div class="form-text">{{ f.help_text }}</div>
+          {% endif %}
+          {% if f.errors %}
+            {% for error in f.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="mb-3" data-required="{{ f.field.required|yesno:'1,0' }}">
+          <label for="{{ f.id_for_label }}" class="form-label">
+            {{ f.label }}{% if f.field.required %} *{% endif %}
+          </label>
+          {{ f }}
+          {% if f.help_text %}
+            <div class="form-text">{{ f.help_text }}</div>
+          {% endif %}
+          {% if f.errors %}
+            {% for error in f.errors %}
+              <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+  {% endwith %}
+{% else %}
+
+{# ============ Render do FORMULÁRIO COMPLETO ============ #}
+  {# Campos ocultos primeiro (CSRF, etc. — se vierem pela instância do form) #}
+  {% for hidden in form.hidden_fields %}
+    {{ hidden }}
+  {% endfor %}
+
+  {# Erros não atrelados a campos #}
+  {% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {# Campos visíveis #}
+  {% for f in form.visible_fields %}
+    {% if f.field.widget.input_type == "checkbox" %}
+      <div class="mb-3" data-required="{{ f.field.required|yesno:'1,0' }}">
+        <div class="form-check">
+          {{ f }}
+          <label class="form-check-label" for="{{ f.id_for_label }}">
+            {{ f.label }}{% if f.field.required %} *{% endif %}
+          </label>
+        </div>
+        {% if f.help_text %}
+          <div class="form-text">{{ f.help_text }}</div>
+        {% endif %}
+        {% if f.errors %}
+          {% for error in f.errors %}
+            <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% else %}
+      <div class="mb-3" data-required="{{ f.field.required|yesno:'1,0' }}">
+        <label for="{{ f.id_for_label }}" class="form-label">
+          {{ f.label }}{% if f.field.required %} *{% endif %}
+        </label>
+        {{ f }}
+        {% if f.help_text %}
+          <div class="form-text">{{ f.help_text }}</div>
+        {% endif %}
+        {% if f.errors %}
+          {% for error in f.errors %}
+            <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+          {% endfor %}
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}

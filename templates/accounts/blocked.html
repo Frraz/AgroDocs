@@ -1,7 +1,48 @@
+<!-- templates/accounts/blocked.html -->
+
+
 {% extends "base.html" %}
+{% block title %}Acesso bloqueado · AgroDocs{% endblock %}
 {% block content %}
-  <h1>Acesso bloqueado</h1>
-  <p>Seu acesso está temporariamente bloqueado.</p>
-  <p>Entre em contato com o administrador para mais informações.</p>
-  <p><a class="btn" href="{% url 'login' %}">Voltar para o login</a></p>
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card border-danger">
+      <div class="card-body">
+        <div class="d-flex align-items-start gap-3 mb-2">
+          <div class="text-danger fs-3">
+            <i class="bi bi-shield-exclamation"></i>
+          </div>
+          <div>
+            <h1 class="h5 text-danger mb-1">Acesso bloqueado</h1>
+            <p class="mb-0 text-muted">Seu acesso está temporariamente bloqueado. Entre em contato com o administrador para mais informações.</p>
+          </div>
+        </div>
+
+        <div class="mt-3 d-flex flex-wrap gap-2">
+          {% if request.user.is_authenticated %}
+            <form method="post" action="{% url 'logout' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-danger">
+                <i class="bi bi-box-arrow-right me-1"></i>Sair
+              </button>
+            </form>
+            <a class="btn btn-outline-secondary" href="{% url 'login' %}">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Voltar para o login
+            </a>
+          {% else %}
+            <a class="btn btn-primary" href="{% url 'login' %}">
+              <i class="bi bi-box-arrow-in-right me-1"></i>Entrar
+            </a>
+          {% endif %}
+        </div>
+
+        <hr class="my-3">
+
+        <div class="small text-muted">
+          Precisa de ajuda? Entre em contato com o suporte ou o administrador da sua conta.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

@@ -1,5 +1,8 @@
+<!-- templates/registration/signup.html -->
+
 {% extends "base.html" %}
 {% load static %}
+{% block title %}Criar conta · AgroDocs{% endblock %}
 {% block content %}
 <div class="auth-wrap">
   <div class="card auth-card fade-in">
@@ -7,62 +10,116 @@
       <i class="bi bi-person-plus me-2"></i>
       <h1 class="h5 m-0">Criar conta</h1>
     </div>
+    <p class="text-muted small mb-3">
+      Crie seu acesso para utilizar o AgroDocs. A senha deve ter no mínimo 8 caracteres.
+    </p>
 
     {% if form.non_field_errors %}
-      <div class="alert alert-danger mb-3">
+      <div class="alert alert-danger mb-3" role="alert">
         {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+    {% endif %}
+
+    {# Deixa a variável disponível para usar no aviso e no campo #}
+    {% firstof form.invite_code form.invitation_code as invite_field %}
+
+    {# Aviso claro quando o código for inválido #}
+    {% if invite_field and invite_field.errors %}
+      <div class="alert alert-warning d-flex align-items-start gap-2 mb-3" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div>
+          <strong>Código de convite inválido.</strong>
+          <div class="small">Verifique o código e tente novamente.</div>
+        </div>
       </div>
     {% endif %}
 
     <form method="post" novalidate class="auth-form">
       {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
 
       {% if form.first_name %}
       <div class="mb-3">
-        <label class="form-label" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label|default:"Nome" }}</label>
+        <label class="form-label" for="{{ form.first_name.id_for_label }}">
+          {{ form.first_name.label|default:"Nome" }}
+        </label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-person"></i></span>
           {{ form.first_name }}
         </div>
-        {% for error in form.first_name.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        {% for error in form.first_name.errors %}
+          <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+        {% endfor %}
       </div>
       {% endif %}
 
       {% if form.username %}
       <div class="mb-3">
-        <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label|default:"Usuário" }}</label>
+        <label class="form-label" for="{{ form.username.id_for_label }}">
+          {{ form.username.label|default:"Usuário" }}
+        </label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-at"></i></span>
           {{ form.username }}
         </div>
-        {% for error in form.username.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        {% for error in form.username.errors %}
+          <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+        {% endfor %}
       </div>
       {% endif %}
 
       {% if form.email %}
       <div class="mb-3">
-        <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label|default:"E-mail" }}</label>
+        <label class="form-label" for="{{ form.email.id_for_label }}">
+          {{ form.email.label|default:"E-mail" }}
+        </label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-envelope"></i></span>
           {{ form.email }}
         </div>
-        {% for error in form.email.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        {% for error in form.email.errors %}
+          <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {# Campo de convite (opcional) — seguro: só renderiza se existir no form #}
+      {% if invite_field %}
+      <div class="mb-3">
+        <label class="form-label d-flex align-items-center justify-content-between" for="{{ invite_field.id_for_label }}">
+          <span>{{ invite_field.label|default:"Código de convite" }}</span>
+          <span class="badge text-bg-secondary">Obrigatório</span>
+        </label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-key"></i></span>
+          {# Mantém o widget do Django; atributos/UX extra via JS abaixo #}
+          {{ invite_field }}
+        </div>
+        <div class="form-text">
+          Informe o código de convite recebido. Ex.: ABCD-1234. Se não tiver um código, contate o administrador.
+        </div>
+        {% for error in invite_field.errors %}
+          <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+        {% endfor %}
       </div>
       {% endif %}
 
       {% if form.password1 %}
       <div class="mb-2">
-        <label class="form-label" for="{{ form.password1.id_for_label }}">{{ form.password1.label|default:"Senha" }}</label>
+        <label class="form-label" for="{{ form.password1.id_for_label }}">
+          {{ form.password1.label|default:"Senha" }}
+        </label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-lock"></i></span>
           {{ form.password1 }}
-          <button class="btn btn-outline-secondary" type="button" data-toggle-password="{{ form.password1.auto_id }}">
+          <button class="btn btn-outline-secondary" type="button" data-toggle-password="{{ form.password1.auto_id }}" aria-label="Mostrar senha">
             <i class="bi bi-eye"></i>
           </button>
         </div>
+
         <!-- Barra de força -->
         <div class="progress mt-2" style="height:6px;">
-          <div class="progress-bar" role="progressbar" style="width:0%;" data-pwd-strength></div>
+          <div class="progress-bar" role="progressbar" style="width:0%;" data-pwd-strength aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
         </div>
         <div class="form-help mt-1" data-pwd-strength-text>Força da senha</div>
 
@@ -74,28 +131,46 @@
           <li data-req="digit"><i class="bi bi-x-circle me-1"></i>Usar números (opcional)</li>
           <li data-req="special"><i class="bi bi-x-circle me-1"></i>Usar caractere especial (opcional)</li>
         </ul>
-        {% for error in form.password1.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        {% for error in form.password1.errors %}
+          <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+        {% endfor %}
       </div>
       {% endif %}
 
       {% if form.password2 %}
       <div class="mb-3">
-        <label class="form-label" for="{{ form.password2.id_for_label }}">{{ form.password2.label|default:"Confirmar senha" }}</label>
+        <label class="form-label" for="{{ form.password2.id_for_label }}">
+          {{ form.password2.label|default:"Confirmar senha" }}
+        </label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-shield-check"></i></span>
           {{ form.password2 }}
-          <button class="btn btn-outline-secondary" type="button" data-toggle-password="{{ form.password2.auto_id }}">
+          <button class="btn btn-outline-secondary" type="button" data-toggle-password="{{ form.password2.auto_id }}" aria-label="Mostrar senha">
             <i class="bi bi-eye"></i>
           </button>
         </div>
         <div class="form-help mt-1 d-none" data-pwd-match>
           <i class="bi bi-check-circle me-1"></i> Senhas coincidem
         </div>
-        {% for error in form.password2.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
+        {% for error in form.password2.errors %}
+          <div class="invalid-feedback d-block" role="alert">{{ error }}</div>
+        {% endfor %}
       </div>
       {% endif %}
 
-      <button class="btn btn-primary w-100" data-submit>
+      {# Fallback seguro: renderiza outros campos que porventura existam no form #}
+      {% for f in form.visible_fields %}
+        {% if f.name != 'first_name' and f.name != 'username' and f.name != 'email' and f.name != 'password1' and f.name != 'password2' and f.name != 'invite_code' and f.name != 'invitation_code' %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} *{% endif %}</label>
+            {{ f }}
+            {% if f.help_text %}<div class="form-text">{{ f.help_text }}</div>{% endif %}
+            {% if f.errors %}{% for error in f.errors %}<div class="invalid-feedback d-block" role="alert">{{ error }}</div>{% endfor %}{% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <button class="btn btn-primary w-100" type="submit" data-submit>
         <span class="label">Cadastrar</span>
         <span class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
       </button>
@@ -107,5 +182,66 @@
   </div>
 </div>
 
+<!-- JS de melhorias de autenticação (toggle de senha, força, caps lock, loading) -->
 <script src="{% static 'js/auth.js' %}"></script>
+
+<!-- UX extra para o código de convite: preencher por querystring, focar em erro e normalizar entrada -->
+<script>
+  (function () {
+    function qs(name) {
+      var m = new RegExp('[?&]' + name + '=([^&]+)').exec(location.search || '');
+      return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+    }
+    var invite = document.querySelector('input[name="invite_code"], input[name="invitation_code"]');
+    if (!invite) return;
+
+    // Preenche a partir de ?invite=, ?code= ou ?inv=
+    var fromURL = qs('invite') || qs('code') || qs('inv');
+    if (fromURL && !invite.value) {
+      invite.value = fromURL;
+    }
+
+    // Normalização leve: remove espaços e coloca em maiúsculas (não afeta validação no backend)
+    function normalize() {
+      var v = invite.value || '';
+      var nv = v.replace(/\s+/g, '').toUpperCase();
+      if (nv !== v) invite.value = nv;
+    }
+    invite.addEventListener('input', normalize);
+    invite.addEventListener('blur', normalize);
+    normalize();
+
+    // Se houver erro no campo, foca e mostra toast amigável
+    var hasError = !!invite.closest('.mb-3')?.querySelector('.invalid-feedback');
+    if (hasError) {
+      try { invite.focus({ preventScroll: true }); } catch(e) { invite.focus(); }
+      try { invite.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch(e) {}
+      if (window.AgroTheme && window.AgroTheme.toast) {
+        window.AgroTheme.toast({
+          type: 'warning',
+          title: 'Convite inválido',
+          message: 'Código inválido, tente novamente'
+        });
+      }
+    }
+
+    // Acessibilidade: descreve ajuda/erro ao leitor de tela
+    var help = invite.closest('.mb-3')?.querySelector('.form-text');
+    var err = invite.closest('.mb-3')?.querySelector('.invalid-feedback');
+    var descIds = [];
+    if (help) {
+      var idh = help.id || (help.id = 'help-invite-' + Math.random().toString(36).slice(2, 8));
+      descIds.push(idh);
+    }
+    if (err) {
+      var ide = err.id || (err.id = 'err-invite-' + Math.random().toString(36).slice(2, 8));
+      descIds.push(ide);
+    }
+    if (descIds.length) {
+      invite.setAttribute('aria-describedby', descIds.join(' '));
+    }
+    invite.setAttribute('autocomplete', 'one-time-code');
+    invite.setAttribute('inputmode', 'text');
+  })();
+</script>
 {% endblock %}

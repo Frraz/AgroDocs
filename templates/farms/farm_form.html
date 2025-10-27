@@ -1,20 +1,51 @@
+<!-- templates/farms/farm_form.html -->
+ 
 {% extends "base.html" %}
+{% block title %}{% if object %}Editar fazenda{% else %}Nova fazenda{% endif %} · AgroDocs{% endblock %}
 {% block content %}
 <div class="row g-4">
   <div class="col-12 col-lg-8">
     <div class="card">
       <div class="card-body">
-        <h1 class="h4 mb-3"><i class="bi bi-house-gear me-2"></i>{% if object %}Editar fazenda{% else %}Nova fazenda{% endif %}</h1>
-        <form method="post" novalidate>
+        <div class="d-flex align-items-start gap-3 mb-2">
+          <div class="text-primary fs-4"><i class="bi bi-house-gear"></i></div>
+          <div>
+            <h1 class="h4 mb-0">{% if object %}Editar fazenda{% else %}Nova fazenda{% endif %}</h1>
+            <small class="text-muted">Preencha os dados da fazenda. Campos marcados com * são obrigatórios.</small>
+          </div>
+        </div>
+        <hr class="my-3">
+
+        <form method="post" class="needs-validation" novalidate>
           {% csrf_token %}
           {% include "partials/form.html" with form=form %}
           <div class="actions-row mt-2">
-            <button class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Salvar</button>
-            <a href="{% url 'farms:farm-list' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button class="btn btn-primary" type="submit">
+              <i class="bi bi-check2 me-1"></i>Salvar
+            </button>
+            <a href="{% url 'farms:farm_list' %}" class="btn btn-outline-secondary">
+              Cancelar
+            </a>
           </div>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+{# Enhancers: adiciona classes de máscara aos campos esperados se o widget não trouxe #}
+<script>
+  (function(){
+    function addClassIf(idOrName, cls){
+      var el = document.getElementById(idOrName) || document.querySelector('[name="'+idOrName+'"]');
+      if (el && !el.classList.contains(cls)) el.classList.add(cls);
+    }
+    // CPF do proprietário
+    addClassIf('id_proprietario_cpf', 'mask-doc');
+    addClassIf('proprietario_cpf', 'mask-doc');
+    // Recibo CAR
+    addClassIf('id_car_recibo', 'mask-car');
+    addClassIf('car_recibo', 'mask-car');
+  })();
+</script>
 {% endblock %}

@@ -1,10 +1,42 @@
+<!-- templates/farms/document_cofirm_delete.html -->
+ 
 {% extends "base.html" %}
+{% block title %}Excluir documento · AgroDocs{% endblock %}
 {% block content %}
-<h1>Excluir Documento</h1>
-<p>Tem certeza que deseja excluir o documento "{{ object }}"?</p>
-<form method="post">
-  {% csrf_token %}
-  <button type="submit" class="btn">Confirmar</button>
-  <a class="btn-outline" href="{% url 'farms:document-list' %}">Cancelar</a>
-</form>
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+    <div class="card border-danger">
+      <div class="card-body">
+        <div class="d-flex align-items-start gap-3 mb-2">
+          <div class="text-danger fs-3">
+            <i class="bi bi-trash3"></i>
+          </div>
+          <div>
+            <h1 class="h5 text-danger mb-1">Excluir documento</h1>
+            <p class="mb-0 text-muted">
+              Esta ação é permanente e não poderá ser desfeita.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-2 mb-3">
+          <p class="mb-1">Tem certeza que deseja excluir o documento
+            “<strong>{{ object.nome|default:object }}</strong>”
+            {% if object.farm %} da fazenda <strong>{{ object.farm.nome }}</strong>{% endif %}?
+          </p>
+        </div>
+
+        <form method="post" class="d-flex flex-wrap gap-2">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-check2-circle me-1"></i>Excluir
+          </button>
+          <a class="btn btn-outline-secondary" href="{% url 'farms:document_list' %}">
+            <i class="bi bi-x-circle me-1"></i>Cancelar
+          </a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

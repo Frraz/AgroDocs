@@ -1,9 +1,20 @@
-/* static/css/theme.css */
+/* static/css/theme.css
+   UI kit do AgroDocs: tema claro/escuro, tipografia moderna, transições suaves,
+   formulários compactos, tabelas responsivas (cards no mobile) e integração com
+   componentes comuns (intl-tel-input, flatpickr, Bootstrap toasts/modals/dropdowns).
+*/
 
 /* =========================================================
    Paletas, camadas, tokens e dimensões
    ========================================================= */
 :root{
+  /* Tipografia e layout */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  --fs:1rem;
+  --lh:1.25;
+  --container-w: 1100px;
+
+  /* Cores base (tema claro) */
   --brand:#3b7a57;
   --brand-600:#2e5f45;
   --bg:#f6f7f9;
@@ -11,22 +22,35 @@
   --text:#0f172a;
   --muted:#64748b;
   --border:#e5e7eb;
-  --elev:0 1px 2px rgba(0,0,0,.06);
-  --focus:0 0 0 .24rem rgba(59,122,87,.28);
 
+  /* Estados */
   --danger:#b91c1c;
   --danger-bg:#fee2e2;
   --success:#16a34a;
   --warning:#d97706;
   --info:#0ea5e9;
 
+  /* Elevação e foco */
+  --elev:0 1px 2px rgba(0,0,0,.06);
+  --elev-md:0 6px 18px rgba(0,0,0,.06);
+  --shadow-focus:0 0 0 .24rem rgba(59,122,87,.28);
+  --focus: var(--shadow-focus);
+
+  /* Raios e dimensões */
   --radius:10px;
   --radius-card:14px;
   --control-h:40px;
-  --fs:1rem;
-  --lh:1.25;
 
-  --toggler-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='%2364748b' stroke-width='2' stroke-linecap='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3/svg%3E");
+  /* Escala de espaçamento utilitária */
+  --space-1: .25rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+
+  /* Ícone do toggler da navbar */
+  --toggler-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='%2364748b' stroke-width='2' stroke-linecap='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
 }
 
 html[data-bs-theme="dark"]{
@@ -37,8 +61,6 @@ html[data-bs-theme="dark"]{
   --text:#e6efe6;
   --muted:#a3b0a3;
   --border:#1c2a1f;
-  --elev:0 1px 3px rgba(0,0,0,.5);
-  --focus:0 0 0 .24rem rgba(106,163,122,.28);
 
   --danger:#fca5a5;
   --danger-bg:#4c1d1d;
@@ -46,7 +68,12 @@ html[data-bs-theme="dark"]{
   --warning:#fbbf24;
   --info:#67e8f9;
 
-  --toggler-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='%23a3b0a3' stroke-width='2' stroke-linecap='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3/svg%3E");
+  --elev:0 1px 3px rgba(0,0,0,.5);
+  --elev-md:0 10px 30px rgba(0,0,0,.55);
+  --shadow-focus:0 0 0 .24rem rgba(106,163,122,.28);
+  --focus: var(--shadow-focus);
+
+  --toggler-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='%23a3b0a3' stroke-width='2' stroke-linecap='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
 }
 
 /* =========================================================
@@ -60,13 +87,22 @@ body{
   text-rendering:optimizeLegibility;
   font-size:var(--fs);
   line-height:var(--lh);
+  font-family: var(--font-sans);
 }
+
+.container{ max-width: var(--container-w); }
 
 /* Seleção de texto harmonizada */
 ::selection{
   background: color-mix(in srgb, var(--brand) 28%, transparent);
   color: var(--text);
 }
+
+/* Scrollbar (webkit) consistente com o tema */
+*::-webkit-scrollbar{ width: 10px; height: 10px; }
+*::-webkit-scrollbar-track{ background: color-mix(in srgb, var(--card) 60%, var(--bg)); }
+*::-webkit-scrollbar-thumb{ background: color-mix(in srgb, var(--muted) 35%, var(--card)); border-radius: 9999px; }
+*::-webkit-scrollbar-thumb:hover{ background: color-mix(in srgb, var(--muted) 55%, var(--card)); }
 
 /* Autofill (WebKit) coerente com o tema */
 input:-webkit-autofill{
@@ -86,7 +122,7 @@ input:-webkit-autofill{
    Transições e microinterações (respeita reduced motion)
    ========================================================= */
 @media (prefers-reduced-motion: no-preference){
-  .card, .btn, input, select, textarea, .navbar, .nav-link, .alert, .dropdown-menu, .table, .progress-bar{
+  .card, .btn, input, select, textarea, .navbar, .nav-link, .alert, .dropdown-menu, .table, .progress-bar, .modal-content{
     transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .12s ease, opacity .2s ease;
   }
   .fade-in{ animation: fadeIn .26s ease; }
@@ -111,7 +147,7 @@ input:-webkit-autofill{
   background:var(--card);
   border-bottom:1px solid var(--border);
 }
-.navbar .navbar-brand{ color:var(--text); }
+.navbar .navbar-brand{ color:var(--text); font-weight: 800; letter-spacing: .2px; }
 .navbar .nav-link{
   color:var(--muted);
   border-radius:8px;
@@ -122,6 +158,12 @@ input:-webkit-autofill{
   color:var(--brand);
   background: color-mix(in srgb, var(--brand) 12%, transparent);
   font-weight:600;
+}
+/* Navbar com efeito de blur ao rolar (opcional, adicione .navbar-bg-blur) */
+.navbar-bg-blur{
+  backdrop-filter: saturate(180%) blur(8px);
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  border-bottom:1px solid var(--border);
 }
 /* Toggler coerente com o tema */
 .navbar .navbar-toggler{
@@ -137,9 +179,16 @@ input:-webkit-autofill{
 /* =========================================================
    Botões
    ========================================================= */
+.btn{
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+.btn:active{ transform: translateY(1px); }
+
 .btn-primary{
   background:var(--brand);
   border-color:var(--brand);
+  color: #fff;
 }
 .btn-primary:hover{
   background:var(--brand-600);
@@ -155,6 +204,12 @@ input:-webkit-autofill{
   color:var(--brand);
   border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
 }
+.btn-success{ background: var(--success); border-color: var(--success); color:#fff; }
+.btn-outline-success{ color: var(--success); border-color: var(--success); }
+.btn-outline-success:hover{ background: var(--success); color:#fff; }
+.btn-danger{ background: var(--danger); border-color: var(--danger); color:#fff; }
+.btn-outline-danger{ color: var(--danger); border-color: var(--danger); }
+.btn-outline-danger:hover{ background: var(--danger); color:#fff; }
 
 /* Botões de ícone (ex.: tema) */
 .btn-icon{
@@ -174,14 +229,17 @@ input:-webkit-autofill{
 html[data-bs-theme="dark"] #themeToggle [data-icon-dark]{ display:inline-block; }
 html[data-bs-theme="dark"] #themeToggle [data-icon-light]{ display:none; }
 
-/* Estados de validação */
-.is-invalid, .form-control.is-invalid{
+/* =========================================================
+   Estados de validação
+   ========================================================= */
+.is-invalid, .form-control.is-invalid, .form-select.is-invalid{
   border-color: var(--danger) !important;
   box-shadow: 0 0 0 .1rem color-mix(in srgb, var(--danger) 35%, transparent);
 }
-.is-valid, .form-control.is-valid{
+.is-valid, .form-control.is-valid, .form-select.is-valid{
   border-color: var(--success) !important;
 }
+.invalid-feedback{ color: var(--danger); }
 
 /* =========================================================
    Cards
@@ -192,8 +250,9 @@ html[data-bs-theme="dark"] #themeToggle [data-icon-light]{ display:none; }
   border-radius:var(--radius-card);
   box-shadow:var(--elev);
 }
-.card:hover{ box-shadow:0 6px 18px rgba(0,0,0,.06); }
+.card:hover{ box-shadow:var(--elev-md); }
 .card .card-body{ padding:1.1rem; } /* compacto */
+.card-header{ background: transparent; border-bottom: 1px solid var(--border); }
 
 /* =========================================================
    Tabelas
@@ -213,6 +272,37 @@ html[data-bs-theme="dark"] #themeToggle [data-icon-light]{ display:none; }
 }
 .table.table-sm td, .table.table-sm th{
   padding:.4rem .5rem;
+}
+/* Cabeçalho fixo opcional (adicione .table-sticky-header ao wrapper .table-responsive) */
+.table-sticky-header thead th{ position: sticky; top: 0; z-index: 2; }
+
+/* Tabelas viram cartões no mobile usando data-th */
+@media (max-width: 768px) {
+  .table-responsive-stack table,
+  .table-responsive-stack thead,
+  .table-responsive-stack tbody,
+  .table-responsive-stack th,
+  .table-responsive-stack td,
+  .table-responsive-stack tr { display: block; width: 100%; }
+  .table-responsive-stack thead { display: none; }
+  .table-responsive-stack tr {
+    margin-bottom: .75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: .5rem;
+    background: var(--card);
+  }
+  .table-responsive-stack td {
+    border: none;
+    position: relative;
+    padding-left: 45%;
+    min-height: 38px;
+  }
+  .table-responsive-stack td::before {
+    position: absolute; top: .5rem; left: .75rem; width: 38%;
+    color: var(--muted); content: attr(data-th); font-weight: 600;
+  }
+  .text-end { text-align: left !important; margin-top: .5rem; }
 }
 
 /* =========================================================
@@ -323,21 +413,40 @@ input:focus,select:focus,textarea:focus{
 .iti__arrow{ border-top-color:var(--muted); opacity:.9; }
 
 /* =========================================================
-   Alerts / dropdown
+   Alerts / dropdown / modals / toasts
    ========================================================= */
 .alert{
   border:1px solid var(--border);
   background: color-mix(in srgb, var(--card) 88%, var(--bg));
 }
-.dropdown-menu{
+.dropdown-menu, .modal-content{
   background:var(--card);
   border-color:var(--border);
   box-shadow:var(--elev);
+  color: var(--text);
 }
 .dropdown-item{ color:var(--text); }
 .dropdown-item:hover{
   background: color-mix(in srgb, var(--brand) 12%, transparent);
 }
+
+/* Toasts (Bootstrap compatível e também simples .toast-container custom) */
+.toast-container{
+  position: fixed; top: 1rem; right: 1rem; z-index: 1060; display: flex; flex-direction: column; gap: .5rem;
+}
+.toast{
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--elev);
+  padding: .75rem 1rem;
+  min-width: 260px;
+}
+.toast .title{ font-weight: 700; margin-bottom: .25rem; }
+.toast.success{ border-color: color-mix(in srgb, var(--success) 60%, var(--border)); }
+.toast.error{ border-color: color-mix(in srgb, var(--danger) 60%, var(--border)); }
+.toast.info{ border-color: color-mix(in srgb, var(--info) 60%, var(--border)); }
 
 /* =========================================================
    Footer
@@ -373,12 +482,29 @@ footer{
 a{ color:var(--brand); text-decoration:none; }
 a:hover{ color:var(--brand-600); }
 
+/* Links discretos para ações secundárias */
+.link-muted{ color: var(--muted); text-decoration: none; }
+.link-muted:hover{ color: var(--brand); text-decoration: underline; }
+
 /* =========================================================
    Auxiliares (auth e ações)
    ========================================================= */
 .auth-wrap{ max-width:480px; margin:3.2rem auto 2rem; }
 .auth-card{ padding:1.25rem; }
 .actions-row{ display:flex; gap:.5rem; flex-wrap:wrap; }
+
+/* Badges/chips utilitários */
+.badge{
+  border-radius: 9999px;
+  padding: .35rem .6rem;
+  border: 1px solid var(--border);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--card) 85%, var(--bg));
+  color: var(--text);
+}
+.badge-success{ background: color-mix(in srgb, var(--success) 18%, transparent); color: var(--success); border-color: color-mix(in srgb, var(--success) 35%, var(--border)); }
+.badge-danger{ background: color-mix(in srgb, var(--danger) 18%, transparent); color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, var(--border)); }
+.badge-info{ background: color-mix(in srgb, var(--info) 18%, transparent); color: var(--info); border-color: color-mix(in srgb, var(--info) 35%, var(--border)); }
 
 /* Foco acessível global */
 :focus-visible{
